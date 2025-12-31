@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <link rel="icon" type="image/png" href="https://i.ibb.co.com/xKFBrmJt/sottyo-logo-png.png">
+    
+    <title>সংবাদ | সত‍্য</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root { --blood-red: #bc0000; --bg: #000; --border: #1a1a1a; }
+        body { background: var(--bg); color: #eee; font-family: 'Noto Sans Bengali', sans-serif; margin: 0; line-height: 1.8; }
+        
+        /* Compact SVG Header for Article View */
+        header { padding: 15px 5%; border-bottom: 1px solid var(--border); background: #000; display: flex; align-items: center; justify-content: space-between; }
+        .logo-small { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+        .logo-small h1 { font-size: 1.8rem; margin: 0; color: #fff; font-weight: 700; }
+
+        .breadcrumb { padding: 12px 5%; background: #050505; color: #666; font-size: 0.85rem; border-bottom: 1px solid #111; }
+
+        /* Two-Column Layout like Amar Desh */
+        .article-container { max-width: 1200px; margin: 30px auto; padding: 0 20px; display: grid; grid-template-columns: 2fr 1fr; gap: 40px; }
+
+        h1.story-title { font-size: 2.8rem; color: #fff; line-height: 1.3; margin: 0 0 20px; font-weight: 700; }
+        .author-meta { border-top: 1px solid #222; border-bottom: 1px solid #222; padding: 12px 0; margin-bottom: 25px; color: #888; font-size: 0.95rem; }
+        
+        .main-image { width: 100%; border-radius: 8px; margin-bottom: 30px; box-shadow: 0 15px 40px rgba(0,0,0,0.6); }
+        .content-area { font-size: 1.3rem; color: #ccc; text-align: justify; white-space: pre-line; }
+
+        /* Professional Sidebar Feed */
+        aside h3 { border-left: 5px solid var(--blood-red); padding-left: 15px; margin-bottom: 25px; font-size: 1.5rem; color: #fff; }
+        .side-post { display: flex; gap: 15px; padding: 15px 0; border-bottom: 1px solid #111; text-decoration: none; color: #bbb; transition: 0.2s; }
+        .side-post:hover { color: #fff; background: #080808; }
+        .side-img { min-width: 110px; height: 75px; background-size: cover; background-position: center; border-radius: 4px; background-color: #111; }
+        .side-title { font-weight: 600; line-height: 1.3; font-size: 1rem; }
+
+        @media (max-width: 900px) { .article-container { grid-template-columns: 1fr; } h1.story-title { font-size: 2rem; } }
+    </style>
+</head>
+<body>
+
+<header>
+    <a href="index.html" class="logo-small">
+        <svg width="25" height="25" viewBox="0 0 24 24" fill="white"><path d="M7.127 22.562l-7.127 1.438 1.438-7.128 14.685-14.685 5.689 5.689-14.685 14.686zm11.332-20.245l-1.933 1.933 5.689 5.689 1.933-1.933-5.689-5.689z"/></svg>
+        <h1>স<span style="color:var(--blood-red)">ত্য</span></h1>
+    </a>
+    <div style="color:var(--blood-red); font-weight:700; font-size:14px; display:flex; align-items:center; gap:5px;">
+        <span style="width:8px; height:8px; background:red; border-radius:50%; display:inline-block;"></span> লাইভ
+    </div>
+</header>
+
+<div class="breadcrumb">প্রচ্ছদ  >  বিশেষ সংবাদ</div>
+
+<div class="article-container">
+    <article id="article-load">
+        <p style="text-align:center; padding:100px; color:#555;">সংবাদ লোড হচ্ছে...</p>
+    </article>
+
+    <aside>
+        <h3>সর্বশেষ সংবাদ</h3>
+        <div id="latest-side-feed">
+            </div>
+    </aside>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+    const _supabase = supabase.createClient('https://lvfcdsjjdwebadvirced.supabase.co', 'sb_publishable_0o8I9clDeVc-S5_Q2oX9XA_o5PKGcdA');
+
+    async function loadFullContent() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const newsId = urlParams.get('id');
+        
+        // 1. Fetch the main story
+        const { data: story } = await _supabase.from('Sottyo').select('*').eq('id', newsId).single();
+        if (story) {
+            document.title = story.Title + " | সত‍্য";
+            document.getElementById('article-load').innerHTML = `
+                <h1 class="story-title">${story.Title}</h1>
+                <div class="author-meta">সত‍্য অনলাইন ডেস্ক | প্রকাশিত: ${new Date(story.created_at).toLocaleString('bn-BD')}</div>
+                <img src="${story.image_url}" class="main-image">
+                <div class="content-area">${story.content}</div>
+            `;
+        }
+
+        // 2. Fetch the Sidebar (Latest News Feed)
+        const { data: recentList } = await _supabase.from('Sottyo').select('*').order('created_at', { ascending: false }).limit(8);
+        if (recentList) {
+            document.getElementById('latest-side-feed').innerHTML = recentList.map(item => `
+                <a href="article.html?id=${item.id}" class="side-post">
+                    <div class="side-img" style="background-image: url('${item.image_url}')"></div>
+                    <div class="side-title">${item.Title}</div>
+                </a>
+            `).join('');
+        }
+    }
+    loadFullContent();
+</script>
+</body>
+
+<head>
+  <!-- Your other head content -->
+  <style>
+    /* Select the div that contains the specific tiiny.host link and hide it */
+    div:has(> a[href="https://tiiny.host?ref=free-site"]) {
+      display: none !important;
+    }
+  </style>
+</head>
+
+
+</html>
